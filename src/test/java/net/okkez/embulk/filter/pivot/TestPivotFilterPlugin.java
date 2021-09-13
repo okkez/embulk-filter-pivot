@@ -121,10 +121,16 @@ public class TestPivotFilterPlugin
     @Test
     public void testTransactionWithOneCommonColumnAndCustomKeyValueName()
     {
+        ConfigSource keyConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_key")
+                .set("type", "string");
+        ConfigSource valueConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_value")
+                .set("type", "string");
         ConfigSource config = defaultConfig()
                 .set("common_columns", Arrays.asList("user_id"))
-                .set("key_key_name", "custom_key")
-                .set("value_key_name", "custom_value");
+                .setNested("key_config", keyConfig)
+                .setNested("value_config", valueConfig);
         final Schema inputSchema = Schema.builder()
                 .add("user_id", Types.STRING)
                 .add("gender", Types.STRING)
@@ -243,10 +249,16 @@ public class TestPivotFilterPlugin
 
     @Test
     public void testOneRecordWithOneCommonColumnAndCustomKeyValueName() {
+        ConfigSource keyConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_key")
+                .set("type", "string");
+        ConfigSource valueConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_value")
+                .set("type", "string");
         ConfigSource config = defaultConfig()
                 .set("common_columns", Arrays.asList("user_id"))
-                .set("key_key_name", "custom_key")
-                .set("value_key_name", "custom_value");
+                .setNested("key_config", keyConfig)
+                .setNested("value_config", valueConfig);
         final Schema inputSchema = Schema.builder()
                 .add("user_id", Types.STRING)
                 .add("gender", Types.STRING)
@@ -267,6 +279,41 @@ public class TestPivotFilterPlugin
             assertEquals("user-123", pageReader.getString(0));
             assertEquals("city", pageReader.getString(1));
             assertEquals("Tokyo", pageReader.getString(2));
+        });
+    }
+
+    @Test
+    public void testOneRecordWithCustomType() {
+        ConfigSource keyConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_key")
+                .set("type", "string");
+        ConfigSource valueConfig = runtime.getExec().newConfigSource()
+                .set("name", "custom_value")
+                .set("type", "long");
+        ConfigSource config = defaultConfig()
+                .set("common_columns", Arrays.asList("user_id"))
+                .setNested("key_config", keyConfig)
+                .setNested("value_config", valueConfig);
+        final Schema inputSchema = Schema.builder()
+                .add("user_id", Types.LONG)
+                .add("age", Types.LONG)
+                .add("score", Types.LONG)
+                .build();
+
+        applyFilter(config, inputSchema, Arrays.asList(123L, 20L, 999L), (pageReader, pageOutput) -> {
+            assertEquals(1, pageOutput.pages.size());
+            for (Page page: pageOutput.pages) {
+                pageReader.setPage(page);
+            }
+
+            assertTrue(pageReader.nextRecord());
+            assertEquals(123L, pageReader.getLong(0));
+            assertEquals("age", pageReader.getString(1));
+            assertEquals(20L, pageReader.getLong(2));
+            assertTrue(pageReader.nextRecord());
+            assertEquals(123L, pageReader.getLong(0));
+            assertEquals("score", pageReader.getString(1));
+            assertEquals(999L, pageReader.getLong(2));
         });
     }
 }

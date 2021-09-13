@@ -6,6 +6,7 @@ import org.embulk.spi.Column;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
+import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
@@ -13,11 +14,14 @@ import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
+import org.embulk.util.config.modules.TypeModule;
+import org.embulk.util.config.units.ColumnConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PivotFilterPlugin
         implements FilterPlugin
@@ -29,13 +33,13 @@ public class PivotFilterPlugin
         @ConfigDefault("[]")
         List<String> getCommonColumns();
 
-        @Config("key_key_name")
-        @ConfigDefault("\"key\"")
-        String getKeyKeyName();
+        @Config("key_config")
+        @ConfigDefault("{\"name\": \"key\", \"type\": \"string\"}")
+        ColumnConfig getKeyConfig();
 
-        @Config("value_key_name")
-        @ConfigDefault("\"value\"")
-        String getValueKeyName();
+        @Config("value_config")
+        @ConfigDefault("{\"name\": \"value\", \"type\": \"string\"}")
+        ColumnConfig getValueConfig();
     }
 
     private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
@@ -89,8 +93,9 @@ public class PivotFilterPlugin
             outputColumns.add(new Column(i, c.getName(), c.getType()));
             i++;
         }
-        outputColumns.add(new Column(i, task.getKeyKeyName(), Types.STRING));
-        outputColumns.add(new Column(i + 1, task.getValueKeyName(), Types.STRING));
+
+        outputColumns.add(new Column(i, task.getKeyConfig().getName(), task.getKeyConfig().getType()));
+        outputColumns.add(new Column(i + 1, task.getValueConfig().getName(), task.getValueConfig().getType()));
 
         return new Schema(outputColumns);
     }
