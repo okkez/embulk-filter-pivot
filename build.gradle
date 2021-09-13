@@ -1,0 +1,94 @@
+plugins {
+    id "java"
+    id "checkstyle"
+    id "maven-publish"
+    id "org.embulk.embulk-plugins" version "0.4.2"
+}
+
+group  "net.okkez.embulk"
+version = "0.1.0"
+
+repositories {
+    mavenCentral()
+}
+configurations {
+    provided
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+def embulkVersion = "0.10.31"
+
+dependencies {
+    compileOnly "org.embulk:embulk-api:${embulkVersion}"
+    compileOnly "org.embulk:embulk-spi:${embulkVersion}"
+    compile "org.embulk:embulk-util-config:0.3.1"
+
+    testCompile "junit:junit:4.+"
+    testCompile "org.embulk:embulk-api:${embulkVersion}"
+    testCompile "org.embulk:embulk-spi:${embulkVersion}"
+    testCompile "org.embulk:embulk-junit4:${embulkVersion}"
+    testCompile "org.embulk:embulk-core:${embulkVersion}"
+    testCompile "org.embulk:embulk-core:${embulkVersion}:tests"
+    testCompile "org.embulk:embulk-deps:${embulkVersion}"
+}
+
+embulkPlugin {
+    mainClass = "net.okkez.embulk.filter.pivot.PivotFilterPlugin"
+    category = "filter"
+    type = "pivot"
+}
+
+publishing {
+    publications {
+        embulkPluginMaven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/mavenPublishLocal"
+        }
+    }
+}
+
+gem {
+    from("LICENSE")  // Optional -- if you need other files in the gem.
+    authors = [ "okkez" ]
+    email = [ "okkez000@gmail.com" ]
+    // "description" of the gem is copied from "description" of your Gradle project.
+    summary = "Pivot filter plugin for Embulk"
+    homepage = "https://github.com/okkez/embulk-filter-pivot"
+    licenses = [ "Apache-2.0" ]
+}
+
+gemPush {
+    host = "https://rubygems.org"
+}
+
+checkstyle {
+    configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+    toolVersion = '6.14.1'
+}
+checkstyleMain {
+    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+    ignoreFailures = true
+}
+checkstyleTest {
+    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+    ignoreFailures = true
+}
+task checkstyle(type: Checkstyle) {
+    classpath = sourceSets.main.output + sourceSets.test.output
+    source = sourceSets.main.allJava + sourceSets.test.allJava
+}
+
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+//}
