@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class FilteredPageOutput implements PageOutput {
+public class FilteredPageOutput implements PageOutput
+{
     private static final Logger log = LoggerFactory.getLogger(FilteredPageOutput.class);
     private final PageReader pageReader;
     private final PageBuilder pageBuilder;
@@ -22,12 +23,13 @@ public class FilteredPageOutput implements PageOutput {
     private final List<Column> expandingColumns;
 
     @SuppressWarnings({"deprecation", "unused"})
-    public FilteredPageOutput(PivotFilterPlugin.PluginTask task,
-                              Schema inputSchema,
-                              Schema outputSchema,
-                              PageOutput output,
-                              List<Column> commonColumns,
-                              List<Column> expandingColumns)
+    public FilteredPageOutput(
+            PivotFilterPlugin.PluginTask task,
+            Schema inputSchema,
+            Schema outputSchema,
+            PageOutput output,
+            List<Column> commonColumns,
+            List<Column> expandingColumns)
     {
         // Keep compatibility with Embulk-0.9.x
         this.pageReader = new PageReader(inputSchema);
@@ -38,13 +40,14 @@ public class FilteredPageOutput implements PageOutput {
     }
 
     @Override
-    public void add(Page page) {
+    public void add(Page page)
+    {
         pageReader.setPage(page);
         while (pageReader.nextRecord()) {
             try {
-                for (Column c: expandingColumns) {
+                for (Column c : expandingColumns) {
                     int i = 0;
-                    for (Column common: commonColumns) {
+                    for (Column common : commonColumns) {
                         setValue(i, common);
                         i++;
                     }
@@ -53,35 +56,43 @@ public class FilteredPageOutput implements PageOutput {
                     setValue(i, c); // value
                     pageBuilder.addRecord();
                 }
-            } catch(DataException e) {
+            }
+            catch (DataException e) {
                 log.warn("{}", e.getMessage());
             }
         }
     }
 
     @SuppressWarnings("deprecation")
-    private void setValue(int index, Column c) {
+    private void setValue(int index, Column c)
+    {
         if (Types.STRING.equals(c.getType())) {
             pageBuilder.setString(index, pageReader.getString(c));
-        } else if (Types.DOUBLE.equals(c.getType())) {
+        }
+        else if (Types.DOUBLE.equals(c.getType())) {
             pageBuilder.setDouble(index, pageReader.getDouble(c));
-        } else if (Types.LONG.equals(c.getType())) {
+        }
+        else if (Types.LONG.equals(c.getType())) {
             pageBuilder.setLong(index, pageReader.getLong(c));
-        } else if (Types.TIMESTAMP.equals(c.getType())) {
+        }
+        else if (Types.TIMESTAMP.equals(c.getType())) {
             // Compatibility for Embulk-0.9.23
             pageBuilder.setTimestamp(index, pageReader.getTimestamp(c));
-        } else if (Types.BOOLEAN.equals(c.getType())) {
+        }
+        else if (Types.BOOLEAN.equals(c.getType())) {
             pageBuilder.setBoolean(index, pageReader.getBoolean(c));
         }
     }
 
     @Override
-    public void finish() {
+    public void finish()
+    {
         pageBuilder.finish();
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         pageReader.close();
         pageBuilder.close();
     }

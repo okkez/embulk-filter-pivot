@@ -36,7 +36,8 @@ public class TestPivotFilterPlugin
     private PivotFilterPlugin plugin;
 
     @Before
-    public void createResource() {
+    public void createResource()
+    {
         plugin = new PivotFilterPlugin();
     }
 
@@ -46,7 +47,8 @@ public class TestPivotFilterPlugin
                 .set("type", "pivot");
     }
 
-    private interface CallbackWithPage {
+    private interface CallbackWithPage
+    {
         void run(PageReader pageReader, MockPageOutput pageOutput);
     }
 
@@ -56,7 +58,7 @@ public class TestPivotFilterPlugin
             final MockPageOutput filteredOutput = new MockPageOutput();
             PageOutput pageOutput = plugin.open(taskSource, inputSchema, outputSchema, filteredOutput);
             List<Page> pages = PageTestUtils.buildPage(runtime.getBufferAllocator(), inputSchema, rawRecord.toArray());
-            for (Page page: pages) {
+            for (Page page : pages) {
                 pageOutput.add(page);
             }
             pageOutput.finish();
@@ -191,7 +193,8 @@ public class TestPivotFilterPlugin
     }
 
     @Test
-    public void testOneRecordWithOneCommonColumn() {
+    public void testOneRecordWithOneCommonColumn()
+    {
         ConfigSource config = defaultConfig()
                 .set("common_columns", Arrays.asList("user_id"));
         final Schema inputSchema = Schema.builder()
@@ -202,7 +205,7 @@ public class TestPivotFilterPlugin
 
         applyFilter(config, inputSchema, Arrays.asList("user-123", "male", "Tokyo"), (pageReader, pageOutput) -> {
             assertEquals(1, pageOutput.pages.size());
-            for (Page page: pageOutput.pages) {
+            for (Page page : pageOutput.pages) {
                 pageReader.setPage(page);
             }
 
@@ -218,7 +221,8 @@ public class TestPivotFilterPlugin
     }
 
     @Test
-    public void testOneRecordWithTwoCommonColumn() {
+    public void testOneRecordWithTwoCommonColumn()
+    {
         ConfigSource config = defaultConfig()
                 .set("common_columns", Arrays.asList("user_id", "project"));
         final Schema inputSchema = Schema.builder()
@@ -230,7 +234,7 @@ public class TestPivotFilterPlugin
 
         applyFilter(config, inputSchema, Arrays.asList("user-123", "project-x", "male", "Tokyo"), (pageReader, pageOutput) -> {
             assertEquals(1, pageOutput.pages.size());
-            for (Page page: pageOutput.pages) {
+            for (Page page : pageOutput.pages) {
                 pageReader.setPage(page);
             }
 
@@ -248,7 +252,8 @@ public class TestPivotFilterPlugin
     }
 
     @Test
-    public void testOneRecordWithOneCommonColumnAndCustomKeyValueName() {
+    public void testOneRecordWithOneCommonColumnAndCustomKeyValueName()
+    {
         ConfigSource keyConfig = runtime.getExec().newConfigSource()
                 .set("name", "custom_key")
                 .set("type", "string");
@@ -267,7 +272,7 @@ public class TestPivotFilterPlugin
 
         applyFilter(config, inputSchema, Arrays.asList("user-123", "male", "Tokyo"), (pageReader, pageOutput) -> {
             assertEquals(1, pageOutput.pages.size());
-            for (Page page: pageOutput.pages) {
+            for (Page page : pageOutput.pages) {
                 pageReader.setPage(page);
             }
 
@@ -283,7 +288,8 @@ public class TestPivotFilterPlugin
     }
 
     @Test
-    public void testOneRecordWithCustomType() {
+    public void testOneRecordWithCustomType()
+    {
         ConfigSource keyConfig = runtime.getExec().newConfigSource()
                 .set("name", "custom_key")
                 .set("type", "string");
@@ -302,7 +308,7 @@ public class TestPivotFilterPlugin
 
         applyFilter(config, inputSchema, Arrays.asList(123L, 20L, 999L), (pageReader, pageOutput) -> {
             assertEquals(1, pageOutput.pages.size());
-            for (Page page: pageOutput.pages) {
+            for (Page page : pageOutput.pages) {
                 pageReader.setPage(page);
             }
 

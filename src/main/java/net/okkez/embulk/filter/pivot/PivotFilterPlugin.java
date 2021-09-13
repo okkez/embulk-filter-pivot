@@ -6,22 +6,18 @@ import org.embulk.spi.Column;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.type.Type;
-import org.embulk.spi.type.Types;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.config.units.ColumnConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class PivotFilterPlugin
         implements FilterPlugin
@@ -53,43 +49,45 @@ public class PivotFilterPlugin
 
     @Override
     public void transaction(ConfigSource config, Schema inputSchema,
-            FilterPlugin.Control control)
+                            FilterPlugin.Control control)
     {
         PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
 
         buildColumns(task, inputSchema);
-        Schema outputSchema = buildOutputSchema(task, inputSchema);
+        Schema outputSchema = buildOutputSchema(task);
 
         control.run(task.toTaskSource(), outputSchema);
     }
 
     @Override
     public PageOutput open(TaskSource taskSource, Schema inputSchema,
-            Schema outputSchema, PageOutput output)
+                           Schema outputSchema, PageOutput output)
     {
         final PluginTask task = TASK_MAPPER.map(taskSource, PluginTask.class);
 
         return new FilteredPageOutput(task, inputSchema, outputSchema, output, commonColumns, expandingColumns);
     }
 
-    private void buildColumns(PluginTask task, Schema inputSchema) {
+    private void buildColumns(PluginTask task, Schema inputSchema)
+    {
         this.commonColumns = new ArrayList<>();
         this.expandingColumns = new ArrayList<>();
 
-        for (Column c: inputSchema.getColumns()) {
+        for (Column c : inputSchema.getColumns()) {
             if (task.getCommonColumns().contains(c.getName())) {
                 this.commonColumns.add(c);
-            } else {
+            }
+            else {
                 this.expandingColumns.add(c);
             }
         }
     }
 
-    private Schema buildOutputSchema(PluginTask task, Schema inputSchema)
+    private Schema buildOutputSchema(PluginTask task)
     {
         final List<Column> outputColumns = new ArrayList<>();
         int i = 0;
-        for (Column c: commonColumns) {
+        for (Column c : commonColumns) {
             outputColumns.add(new Column(i, c.getName(), c.getType()));
             i++;
         }
@@ -97,6 +95,11 @@ public class PivotFilterPlugin
         outputColumns.add(new Column(i, task.getKeyConfig().getName(), task.getKeyConfig().getType()));
         outputColumns.add(new Column(i + 1, task.getValueConfig().getName(), task.getValueConfig().getType()));
 
+        if (log.isDebugEnabled()) {
+            for (Column c : outputColumns) {
+                log.debug("{}", c);
+            }
+        }
         return new Schema(outputColumns);
     }
 }
